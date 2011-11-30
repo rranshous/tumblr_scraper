@@ -1,4 +1,5 @@
-
+import asyncore
+from tupilicious.async_client import AsyncClient as TupleClient
 
 # the flow server is going to be a asyn core
 # based server.
@@ -10,9 +11,11 @@
 
 
 class FlowServer(flow,host='localhost',port=9119):
+    # Has limitation that a pipe can only have
+    # one output (and input) connector
 
     # async tuple client
-    tc = tuple_client(host,port)
+    tc = TupleClient(host,port)
 
     def run_flow():
 
@@ -32,5 +35,8 @@ class FlowServer(flow,host='localhost',port=9119):
 
             # put in our request for msgs
             ac.get_wait(in_req,run_worker)
+
+        # start asyncore loop
+        asyncore.loop()
 
     return run_flow

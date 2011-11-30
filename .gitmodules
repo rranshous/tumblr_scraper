@@ -1,0 +1,3 @@
+[submodule "tupilicious"]
+	path = tupilicious
+	url = git@github.com:rranshous/tupilicious
