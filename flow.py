@@ -3,8 +3,8 @@
 from piping import Pipe
 
 # the workers receive a message and than put off another message
-from workers import generate_root_urls, generate_page_urls \
-                    generate_pic_urls, generate_pic_path
+from workers import generate_page_urls, generate_pic_urls, \
+                    generate_pic_path
 
 # the connectors specify the message pattern between pipes
 from connectors import RootURL, PageURL, PicURL, PicPath
@@ -15,7 +15,9 @@ class Flow(list):
     """
     a set of pipes which all relate to eachother
     """
-    pass
+    def __init__(self, *items):
+        for i in items:
+            self.append(i)
 
 
 ## setup our piping

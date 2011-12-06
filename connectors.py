@@ -62,8 +62,10 @@ def Connector(name, fields):
     # to need to add some sort of identifier as initial
     # fields
     fields = ['connector_name'] + fields
-    return dnamedtuple(name, fields, connector_name='name')
-
+    def create_connector(*args,**kwargs):
+        t = dnamedtuple(name, fields)
+        return t(*((name,)+args),**kwargs)
+    return create_connector
 
 # start with the root url for the tumblr site
 # (root url,)

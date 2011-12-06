@@ -1,5 +1,6 @@
 import asyncore
-from tupilicious.async_client import AsyncClient as TupleClient
+from functools import partial
+from tupilicious.asyncore_client import AsyncClient as TupleClient
 
 # the flow server is going to be a asyn core
 # based server.
@@ -10,31 +11,37 @@ from tupilicious.async_client import AsyncClient as TupleClient
 # up we push to the tuple server
 
 
-class FlowServer(flow,host='localhost',port=9119):
+
+# create a callbtck which runs the worker
+# against incoming msgs and than puts in
+# another request for messages
+def run_worker(pipe,tc,work):
+    print 'running: ' + str(work) + ' ' + str(pipe.worker)
+    # strip out the name of the connector
+    work = work[1:]
+    for r in pipe.worker(*work):
+        out_msg = pipe.out_conn(*r)
+        tc.put(tuple(out_msg))
+    in_req = pipe.in_conn()
+    tc.get_wait(tuple(in_req),run_worker)
+
+
+def FlowServer(flow,host='localhost',port=9119):
     # Has limitation that a pipe can only have
     # one output (and input) connector
 
-    # async tuple client
+# async tuple
     tc = TupleClient(host,port)
 
     def run_flow():
-
         for pipe in flow:
-
             # create a request of it's in conn
             in_req = pipe.in_conn()
 
-            # create a callback which runs the worker
-            # against incoming msgs and than puts in
-            # another request for messages
-            def run_worker(*work):
-                for r in pipe.worker(*work):
-                    out_msg = pipe.out_conn(*r)
-                    ac.put(out_msg)
-                ac.get_wait(in_req,run_worker)
-
             # put in our request for msgs
-            ac.get_wait(in_req,run_worker)
+            print 'putting in request: ' + str(in_req) + ' ' + str(pipe)
+            tc.get_wait(tuple(in_req),
+                        partial(run_worker,pipe,tc))
 
         # start asyncore loop
         asyncore.loop()

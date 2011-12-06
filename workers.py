@@ -1,13 +1,15 @@
-
+import os.path
+from itertools import count
 from decorator import decorator
 import urllib2
 
 @decorator
-def worker(f, *args, **kwargs)
+def worker(f, *args, **kwargs):
     f.worker = True
     return f(*args,**kwargs)
 
 def get_html(url):
+    print 'getting: %s' % url
     try:
         return urllib2.urlopen(url).read()
     except:
@@ -26,20 +28,25 @@ def generate_page_urls(root_url):
     if not root_url.endswith('/'):
         root_url += '/'
 
+    print 'generating page urls: %s' % root_url
+
     for i in count(2):
-        url = root_url + 'page/' + i
+        url = root_url + 'page/' + str(i)
 
         # check and see if the page has any posts
         html = get_html(url)
 
         if not html:
+            print 'no html?'
             continue
 
         if 'post' in html: # TODO: better / does this work ?
+            print 'found: %s' % url
             yield url
 
         # no post = last page
         else:
+            print 'no posts'
             break
 
 @worker

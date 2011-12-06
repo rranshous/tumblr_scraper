@@ -8,7 +8,7 @@
 # than download each and add d/l path?
 
 
-from flow import tublr_scrape
+from flow import tumblr_scrape
 
 
 if __name__ == '__main__':
@@ -16,5 +16,5 @@ if __name__ == '__main__':
     from flowserver import FlowServer
 
     # get'r goin'
-    server = FlowServer(flow)
+    server = FlowServer(tumblr_scrape)
     server() # starts the server
