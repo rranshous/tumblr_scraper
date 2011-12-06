@@ -41,24 +41,25 @@ def generate_page_urls(root_url):
 
     print 'generating page urls: %s' % root_url
 
-    for i in count(2):
-        url = root_url + 'page/' + str(i)
+    MAX_PAGES = 1000
+    for i in xrange(1,MAX_PAGES):
+        yield root_url + 'page/' + str(i)
 
-        # check and see if the page has any posts
-        html = get_html(url)
+@worker
+def validate_page_urls(page_url):
+    """
+    takes a page url and checks to make sure there is a post
+    on the page, if there is a post it's considered valid
+    and is passed on
+    """
+    # check and see if the page has any posts
+    html = get_html(page_url)
 
-        if not html:
-            print 'no html?'
-            continue
+    print 'validating: %s' % page_url
 
-        if 'post' in html: # TODO: better / does this work ?
-            print 'found: %s' % url
-            yield url
-
-        # no post = last page
-        else:
-            print 'no posts'
-            break
+    if html and 'post' in html: # TODO: better / does this work ?
+        print 'found: %s' % page_url
+        yield page_url
 
 @worker
 def generate_pic_urls(page_url):
@@ -77,10 +78,10 @@ def generate_pic_urls(page_url):
             src = img.get('src')
             for p in patterns:
                 if p in src:
-                    print 'found: %s' % src
                     # make sure the img is large
                     size = src[-7:-4]
                     if size.isdigit() and int(size) > 300:
+                        print 'found: %s' % src
                         yield src
 
 @worker
@@ -89,12 +90,13 @@ def generate_pic_path(pic_url):
     download the pic and save it somewhere put out the
     save path
     """
-    data = get_file(pic_url)
-    # TODO: move / do something else
+    # dont over write
     save_root = './output'
     pic_name = pic_url.rsplit('/',1)[-1]
     save_path = os.path.join(save_root,pic_name)
-    with open(save_path,'wb') as fh:
-        fh.write(data)
-
-    yield save_path
+    if not os.path.exists(save_path):
+        data = get_file(pic_url)
+        # TODO: move / do something else
+        with open(save_path,'wb') as fh:
+            fh.write(data)
+        yield save_path

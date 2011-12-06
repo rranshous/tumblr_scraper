@@ -78,6 +78,10 @@ RootURL = Connector('RootURL',['url'])
 # (root url, page_url)
 PageURL = Connector('PageURL',['url'])
 
+# filter the page urls down to working ones
+# (root url, page url)
+ValidPageURL = Connector('ValidPageURL',['url'])
+
 # take the page url and give off picture urls
 # (root url, page_url, pic url)
 PicURL = Connector('PicURL',['url'])
