@@ -23,6 +23,8 @@ def nnamedtuple(cls,*_tuple,**namedvalues):
         if arg in namedvalues:
             _tuple[index] = namedvalues.get(arg)
 
+    print '_tuple: '+str(_tuple)
+
     # now that we've got our tuple sorted out create the namedtuple
     nt = cls(*_tuple)
 

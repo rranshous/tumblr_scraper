@@ -2,6 +2,7 @@ import os.path
 from itertools import count
 from decorator import decorator
 import urllib2
+from hashlib import md5
 
 @decorator
 def worker(f, *args, **kwargs):
@@ -10,8 +11,18 @@ def worker(f, *args, **kwargs):
 
 def get_html(url):
     print 'getting: %s' % url
+    # check the disk
+    cache_path = '/tmp/_c'+md5(url).hexdigest()
+    if os.path.exists(cache_path):
+        with open(cache_path,'r') as fh:
+            print 'reading: %s' % cache_path
+            return fh.read()
     try:
-        return urllib2.urlopen(url).read()
+        d = urllib2.urlopen(url).read()
+        with open(cache_path,'w') as fh:
+            print 'writing: %s' % cache_path
+            fh.write(d)
+        return d
     except:
         return None
 
@@ -55,15 +66,22 @@ def generate_pic_urls(page_url):
     inspect the page and pull out all the post pictures
     urls
     """
-    import BeautifulSoup as BS
+    from BeautifulSoup import BeautifulSoup as BS
     html = get_html(page_url)
     if html:
+        print 'making soup'
         soup = BS(html)
-        patterns = ['media.tublr.com','tumblr.com/photo']
-        for url in soup.findAll('img'):
+        patterns = ['media.tumblr.com','tumblr.com/photo']
+        print 'images: %s' % len([x for x in soup.findAll('img')])
+        for img in soup.findAll('img'):
+            src = img.get('src')
             for p in patterns:
-                if p in img.get('src'):
-                    yield img.src
+                if p in src:
+                    print 'found: %s' % src
+                    # make sure the img is large
+                    size = src[-7:-4]
+                    if size.isdigit() and int(size) > 300:
+                        yield src
 
 @worker
 def generate_pic_path(pic_url):

@@ -1,4 +1,5 @@
 import asyncore
+from collections import namedtuple
 from functools import partial
 from tupilicious.asyncore_client import AsyncClient as TupleClient
 
@@ -20,10 +21,13 @@ def run_worker(pipe,tc,work):
     # strip out the name of the connector
     work = work[1:]
     for r in pipe.worker(*work):
+        if not isinstance(r,tuple):
+            r = (r,)
         out_msg = pipe.out_conn(*r)
         tc.put(tuple(out_msg))
     in_req = pipe.in_conn()
-    tc.get_wait(tuple(in_req),run_worker)
+    tc.get_wait(tuple(in_req),
+                partial(run_worker,pipe,tc))
 
 
 def FlowServer(flow,host='localhost',port=9119):
