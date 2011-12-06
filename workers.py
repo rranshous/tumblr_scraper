@@ -100,3 +100,5 @@ def generate_pic_path(pic_url):
         with open(save_path,'wb') as fh:
             fh.write(data)
         yield save_path
+    else:
+        print 'EXISTS!'
