@@ -26,6 +26,7 @@ def run_worker(pipe,tc,work):
         out_msg = pipe.out_conn(*r)
         tc.put(tuple(out_msg))
     in_req = pipe.in_conn()
+    print 'resubmitting: '+str(in_req)
     tc.get_wait(tuple(in_req),
                 partial(run_worker,pipe,tc))
 

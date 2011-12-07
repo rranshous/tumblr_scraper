@@ -95,10 +95,13 @@ def generate_pic_path(pic_url):
     pic_name = pic_url.rsplit('/',1)[-1]
     save_path = os.path.join(save_root,pic_name)
     if not os.path.exists(save_path):
-        data = get_file(pic_url)
-        # TODO: move / do something else
-        with open(save_path,'wb') as fh:
-            fh.write(data)
-        yield save_path
+        try:
+            data = get_file(pic_url)
+            # TODO: move / do something else
+            with open(save_path,'wb') as fh:
+                fh.write(data)
+            yield save_path
+        except Exception, ex:
+            print 'exception writing file: %s' % ex
     else:
-        print 'EXISTS!'
+        print 'image exists, skipping'
