@@ -4,7 +4,8 @@ from piping import Pipe
 
 # the workers receive a message and than put off another message
 from workers import generate_page_urls, generate_pic_urls, \
-                    generate_pic_path, validate_page_urls
+                    generate_pic_path, validate_page_urls, \
+                    generate_pic_details
 
 # the connectors specify the message pattern between pipes
 from connectors import RootURL, PageURL, ValidPageURL, PicURL, PicPath
@@ -24,7 +25,7 @@ class Flow(list):
 tumblr_scrape = Flow(
 
     # root url =>> page urls
-    Pipe(RootURL,generate_page_urls,PageURL),
+    Pipe(RootURL, generate_page_urls, PageURL),
 
     # page urls =>> pages with blogs
     Pipe(PageURL, validate_page_urls, ValidPageURL),
@@ -33,7 +34,10 @@ tumblr_scrape = Flow(
     Pipe(ValidPageURL, generate_pic_urls, PicURL),
 
     # pic url =>> pic save path
-    Pipe(PicURL, generate_pic_path, PicPath)
+    Pipe(PicURL, generate_pic_path, PicPath),
+
+    # pic save path =>> nothing
+    Pipe(PicPath, generate_pic_details, None),
 
     # not sure what we'll do next, reporting, storing of reports?
     # idk

@@ -21,10 +21,11 @@ def run_worker(pipe,tc,work):
     # strip out the name of the connector
     work = work[1:]
     for r in pipe.worker(*work):
-        if not isinstance(r,tuple):
+        if r is not None and not isinstance(r,tuple):
             r = (r,)
-        out_msg = pipe.out_conn(*r)
-        tc.put(tuple(out_msg))
+        if r:
+            out_msg = pipe.out_conn(*r)
+            tc.put(tuple(out_msg))
     in_req = pipe.in_conn()
     print 'resubmitting: '+str(in_req)
     tc.get_wait(tuple(in_req),

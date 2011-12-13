@@ -3,6 +3,11 @@ from itertools import count
 from decorator import decorator
 import urllib2
 from hashlib import md5
+from memcache import Client as MCClient
+from base64 import b64encode, b64decode
+from imgcompare.compare_images import get_image_visual_hash
+
+mc = MCClient(['127.0.0.1:11211'])
 
 @decorator
 def worker(f, *args, **kwargs):
@@ -11,20 +16,18 @@ def worker(f, *args, **kwargs):
 
 def get_html(url):
     print 'getting: %s' % url
-    # check the disk
-    cache_path = '/tmp/_c'+md5(url).hexdigest()
-    if os.path.exists(cache_path):
-        with open(cache_path,'r') as fh:
-            print 'reading: %s' % cache_path
-            return fh.read()
-    try:
-        d = urllib2.urlopen(url).read()
-        with open(cache_path,'w') as fh:
-            print 'writing: %s' % cache_path
-            fh.write(d)
-        return d
-    except:
-        return None
+    # check the cache
+    key = str(url)+':webcache'
+    d = mc.get(key)
+    if d:
+        d = b64decode(d)
+    if not d:
+        try:
+            d = urllib2.urlopen(url).read()
+            mc.set(key,b64encode(str(d)))
+        except:
+            d = None
+    return d
 
 def get_file(url):
     return get_html(url)
@@ -94,14 +97,25 @@ def generate_pic_path(pic_url):
     save_root = './output'
     pic_name = pic_url.rsplit('/',1)[-1]
     save_path = os.path.join(save_root,pic_name)
-    if not os.path.exists(save_path):
-        try:
-            data = get_file(pic_url)
-            # TODO: move / do something else
-            with open(save_path,'wb') as fh:
-                fh.write(data)
-            yield save_path
-        except Exception, ex:
-            print 'exception writing file: %s' % ex
-    else:
-        print 'image exists, skipping'
+    if os.path.exists(save_path):
+        yield save_path
+
+    try:
+        data = get_file(pic_url)
+        # TODO: move / do something else
+        with open(save_path,'wb') as fh:
+            fh.write(data)
+        yield save_path
+    except Exception, ex:
+        print 'exception writing file: %s' % ex
+
+@worker
+def generate_pic_details(pic_path):
+    """
+    calculates the pics av_hash and saves it
+    """
+    av_hash = get_image_visual_hash(pic_path)
+    print 'generated av hash: %s' % pic_path
+    mc.set(str(pic_path)+':av_hash',str(av_hash))
+    yield None
+

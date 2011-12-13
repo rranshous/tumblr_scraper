@@ -1,3 +1,6 @@
 [submodule "tupilicious"]
 	path = tupilicious
 	url = git@github.com:rranshous/tupilicious
+[submodule "imgcompare"]
+	path = imgcompare
+	url = git@github.com:rranshous/imgcompare.git
