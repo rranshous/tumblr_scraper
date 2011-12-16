@@ -188,11 +188,12 @@ class SavePic(Worker):
 
     def save_data(self, data):
         try:
+            print 'saving pic: %s' % self.save_path
             with open(self.save_path,'w') as fh:
                 fh.write(data)
             self.result(self.save_path)
         except Exception, ex:
-            print 'save exception: %s' % ex
+            print 'save error: %s' % ex
         finally:
             self.work_finished()
 
