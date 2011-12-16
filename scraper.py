@@ -17,4 +17,4 @@ if __name__ == '__main__':
 
     # get'r goin'
     server = FlowServer(tumblr_scrape)
-    server() # starts the server
+    server.run_flow() # start server

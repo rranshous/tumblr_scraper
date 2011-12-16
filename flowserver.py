@@ -11,54 +11,64 @@ from tupilicious.asyncore_client import AsyncClient as TupleClient
 # the worker against it. whatever the worker yields
 # up we push to the tuple server
 
-def make_new_request(pipe,tc):
-    # subit our wait for more work
-
-    # create a request of it's in conn
-    in_req = pipe.in_conn()
-
-    # put in our request for msgs
-    print 'putting in request: ' + str(in_req) + ' ' + str(pipe)
-    tc.get_wait(tuple(in_req),
-                partial(run_worker,pipe,tc))
-
 # create a callbtck which runs the worker
 # against incoming msgs and than puts in
 # another request for messages
-def run_worker(pipe,tc,work):
-    print 'running: ' + str(work) + ' ' + str(pipe.worker)
-    # strip out the name of the connector
-    work = work[1:]
-    if pipe.worker.async:
-        print 'running async'
-        # instead of yielding we are going to use
-        # a callback
-        pipe.worker(*work,
-                    callback=partial(send_work_result,pipe,tc))
-    else:
-        for r in pipe.worker(*work):
-            send_work_result(pipe,tc,r)
-    make_new_request(pipe,tc)
 
-def send_work_result(pipe,tc,r):
-    if r is not None and not isinstance(r,tuple):
-        r = (r,)
-    if r:
-        out_msg = pipe.out_conn(*r)
-        tc.put(tuple(out_msg))
+class WorkHandler(object):
+    def __init__(self,server,pipe):
+        self.pipe = pipe
+        self.server = server
 
-def FlowServer(flow,host='localhost',port=9119):
-    # Has limitation that a pipe can only have
-    # one output (and input) connector
+    def run_work(self, work):
+        # create our worker
+        worker = self.pipe.worker(self)
 
-    # async tuple
-    tc = TupleClient(host,port)
+        # strip the connector name
+        work = work[1:]
 
-    def run_flow():
-        for pipe in flow:
-            make_new_request(pipe,tc)
+        # run the worker
+        worker(*work)
+
+    def __call__(self, work):
+        # we have some work to preform
+        self.run_work(work)
+
+    def work_finished(self):
+        # our work is done, let the server know
+        self.server.work_finished(pipe)
+
+    def send_result(self,r):
+        # our worker has a result, pass it on
+        self.server.send_work_result(self.pipe,r)
+
+class FlowServer(object):
+    def __init__(self, flow, host='localhost', port=9119):
+        self.flow = flow
+        self.hostname = hostname
+        self.port = port
+        self.tc = TupleClient(host,port)
+
+    def run_flow(self):
+        for pipe in self.flow:
+            self.make_work_request(pipe)
 
         # start asyncore loop
         asyncore.loop()
 
-    return run_flow
+    def make_work_request(self, pipe):
+        in_req = pipe.in_conn()
+        self.tc.get_wait(tuple(in_req),
+                         WorkHandler(self,pipe))
+
+    def send_work_result(self, pipe, r):
+        if r is not None and not isinstance(r,tuple):
+            r = (r,)
+        if r:
+            out_msg = pipe.out_conn(*r)
+            self.tc.put(tuple(out_msg))
+
+    def work_finished(self, pipe):
+        # if we are doing requests serially (only one worker at a time)
+        # time to make another request for work
+        pass
