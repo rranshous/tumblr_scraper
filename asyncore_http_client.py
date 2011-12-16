@@ -111,6 +111,8 @@ class async_http(asyncore.dispatcher_with_send):
 
 def do_request(uri, consumer):
 
+    print 'making http request: %s' % uri
+
     # turn the uri into a valid request
     scheme, host, path, params, query, fragment = urlparse.urlparse(uri)
     assert scheme == "http", "only supports HTTP requests"

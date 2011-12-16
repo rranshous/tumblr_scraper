@@ -136,6 +136,8 @@ class SavePic(Worker):
             # in this case the callback after saving the data down will
             # be to put off the next message
             async_request(pic_url, self.save_data)
+        else:
+            self.work_finished()
 
     def save_data(self, data):
         try:
@@ -144,8 +146,8 @@ class SavePic(Worker):
             self.result(path)
         except:
             pass
-
-        self.work_finished()
+        finally:
+            self.work_finished()
 
 
 class GeneratePicDetails(Worker):
