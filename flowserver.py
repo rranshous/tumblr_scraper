@@ -36,7 +36,7 @@ class WorkHandler(object):
 
     def work_finished(self):
         # our work is done, let the server know
-        self.server.work_finished(pipe)
+        self.server.work_finished(self.pipe)
 
     def send_result(self,r):
         # our worker has a result, pass it on
@@ -45,7 +45,7 @@ class WorkHandler(object):
 class FlowServer(object):
     def __init__(self, flow, host='localhost', port=9119):
         self.flow = flow
-        self.hostname = hostname
+        self.host = host
         self.port = port
         self.tc = TupleClient(host,port)
 
@@ -71,4 +71,4 @@ class FlowServer(object):
     def work_finished(self, pipe):
         # if we are doing requests serially (only one worker at a time)
         # time to make another request for work
-        pass
+        self.make_work_request(pipe)

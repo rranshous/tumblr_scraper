@@ -3,7 +3,7 @@
 from piping import Pipe
 
 # the workers receive a message and than put off another message
-from workers import GeneratePageURLs, ValidatePageURL, GeneratePicURLs \
+from workers import GeneratePageURLs, ValidatePageURL, GeneratePicURLs, \
                     SavePic, GeneratePicDetails
 
 # the connectors specify the message pattern between pipes

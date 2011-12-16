@@ -8,7 +8,7 @@ from memcache import Client as MCClient
 from base64 import b64encode, b64decode
 from imgcompare.compare_images import get_image_visual_hash
 from asyncore_http_client import async_request
-from flowserver import send_work_result, make_new_request
+from BeautifulSoup import BeautifulSoup as BS
 
 mc = MCClient(['127.0.0.1:11211'])
 
@@ -45,7 +45,7 @@ class Worker(object):
 
     # this way we don't have to call run dir
     def __call__(self,*args,**kwargs):
-        print 'running worker: %s' % self.__cls__.__name__
+        print 'running worker: %s' % type(self).__name__
         self.run(*args,**kwargs)
 
 
@@ -64,7 +64,7 @@ class GeneratePageURLs(Worker):
             self.result(root_url + 'page/' + str(i))
 
 
-class ValidatePageURL(Worker)
+class ValidatePageURL(Worker):
     async = True
     def run(self, page_url):
         self.page_url = page_url
@@ -72,11 +72,10 @@ class ValidatePageURL(Worker)
 
     def validate_page(self, html):
         if html and 'post' in html: # TODO: better / does this work ?
-            self.result(page_url)
+            self.result(self.page_url)
         self.work_finished()
 
 
-from BeautifulSoup import BeautifulSoup as BS
 class GeneratePicURLs(Worker):
     min_img_size = 300
     async = True
