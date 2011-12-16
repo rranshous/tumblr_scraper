@@ -51,7 +51,10 @@ class FlowServer(object):
 
     def run_flow(self):
         for pipe in self.flow:
-            self.make_work_request(pipe)
+            for i in xrange(pipe.worker.max_workers):
+                # we want tc connection for each worker instance
+                self.tc.max_handlers += 1
+                self.make_work_request(pipe)
 
         # start asyncore loop
         asyncore.loop()

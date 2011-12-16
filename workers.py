@@ -31,11 +31,14 @@ def get_html(url):
 
 class Worker(object):
 
+    # how many simultanious instances of this
+    # worker should we run ?
+    max_workers = 1
+
     def __init__(self, handler):
         self.handler = handler
 
-    # in async workers we don't yield results
-    # we send them via this callback
+    # send up the results of our work
     def result(self,r):
         self.handler.send_result(r)
 
@@ -65,7 +68,12 @@ class GeneratePageURLs(Worker):
 
 
 class ValidatePageURL(Worker):
-    async = True
+    max_workers = 10
+
+    def __init__(self,*args):
+        super(ValidatePageURL,self).__init__(*args)
+        self.page_url = None
+
     def run(self, page_url):
         self.page_url = page_url
         async_request(page_url, self.validate_page)
@@ -78,7 +86,11 @@ class ValidatePageURL(Worker):
 
 class GeneratePicURLs(Worker):
     min_img_size = 300
-    async = True
+    max_workers = 10
+
+    def __init__(self,*args):
+        super(GeneratePicURLs,self).__init__(*args)
+        self.page_url = None
 
     def run(self, page_url):
         self.page_url = page_url
@@ -107,27 +119,27 @@ class GeneratePicURLs(Worker):
 
 class SavePic(Worker):
     save_root = './output'
-    async = True
+    max_workers = 10
 
-    def __init__(self):
-        super(SavePic,self).__init__()
+    def __init__(self,*args):
+        super(SavePic,self).__init__(*args)
         self.save_path = None
         self.pic_name = None
 
     def run(self, pic_url):
         self.pic_name = pic_url.rsplit('/',1)[-1]
-        self.save_path = os.path.join(save_root,pic_name)
+        self.save_path = os.path.join(self.save_root,self.pic_name)
         if not os.path.exists(self.save_path):
             # asyncore http request
             # we pass as a callback to the async request a func
             # which will save the data and than call it's own callback
             # in this case the callback after saving the data down will
             # be to put off the next message
-            async_request(self.pic_url, self.save_data)
+            async_request(pic_url, self.save_data)
 
     def save_data(self, data):
         try:
-            with open(path,'w') as fh:
+            with open(self.save_path,'w') as fh:
                 fh.write(data)
             self.result(path)
         except:
@@ -137,6 +149,7 @@ class SavePic(Worker):
 
 
 class GeneratePicDetails(Worker):
+    max_workers = 10
     def run(self, pic_path):
         av_hash = get_image_visual_hash(pic_path)
         mc.set(str(pic_path)+':av_hash',str(av_hash))
