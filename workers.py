@@ -7,10 +7,27 @@ from functools import partial
 from memcache import Client as MCClient
 from base64 import b64encode, b64decode
 from imgcompare.compare_images import get_image_visual_hash
-from asyncore_http_client import async_request
+from asyncore_http_client import async_request as _async_request
 from BeautifulSoup import BeautifulSoup as BS
 
 mc = MCClient(['127.0.0.1:11211'])
+
+def cache_data(key,callback,d):
+    mc.set(key,b64encode(d))
+    if callback:
+        print 'calling cache data callback'
+        callback(d)
+
+def async_request(url,callback):
+    # cheat / break async and use memcache
+    key = str(url)+':webcache'
+    d = mc.get(key)
+    if d:
+        d = b64decode(d)
+        callback(d)
+    else:
+        _async_request(url,
+                       partial(cache_data,key,callback))
 
 
 def get_html(url):
@@ -65,6 +82,7 @@ class GeneratePageURLs(Worker):
         MAX_PAGES = 1000
         for i in xrange(1,MAX_PAGES):
             self.result(root_url + 'page/' + str(i))
+        self.work_finished()
 
 
 class ValidatePageURL(Worker):
@@ -75,13 +93,32 @@ class ValidatePageURL(Worker):
         self.page_url = None
 
     def run(self, page_url):
-        self.page_url = page_url
-        async_request(page_url, self.validate_page)
+        try:
+
+            self.page_url = page_url
+            # memcache to the rescue
+            valid = mc.get(self.page_url + ':valid')
+            if valid:
+                self.result(self.page_url)
+                self.work_finished()
+            else:
+                async_request(page_url, self.validate_page)
+
+        except Exception, ex:
+            print 'validate page error: %s' % ex
+            self.work_finished()
 
     def validate_page(self, html):
-        if html and 'post' in html: # TODO: better / does this work ?
-            self.result(self.page_url)
-        self.work_finished()
+        try:
+
+            if html and 'post' in html: # TODO: better / does this work ?
+                self.result(self.page_url)
+                mc.set(self.page_url + ':valid',1)
+            self.work_finished()
+
+        except Exception, ex:
+            print 'validate page error: %s' % ex
+            self.work_finished()
 
 
 class GeneratePicURLs(Worker):
@@ -94,28 +131,35 @@ class GeneratePicURLs(Worker):
 
     def run(self, page_url):
         self.page_url = page_url
-        async_request(page_url, self.find_pic_urls)
+        try:
+            async_request(page_url, self.find_pic_urls)
+        except Exception, ex:
+            print 'generate pic url error: %s' % ex
+            self.work_finished()
 
     def find_pic_urls(self, html):
         if not html:
             return
+        try:
 
-        soup = BS(html)
-        patterns = ['media.tumblr.com','tumblr.com/photo']
+            soup = BS(html)
+            patterns = ['media.tumblr.com','tumblr.com/photo']
 
-        # go through all the images in the page
-        for img in soup.findAll('img'):
-            src = img.get('src')
-            # finding ones which match the patterns
-            for p in patterns:
-                if p in src:
-                    # make sure the img is large enough
-                    size = src[-7:-4]
-                    if size.isdigit() and int(size) > self.min_img_size:
-                        self.result(src)
+            # go through all the images in the page
+            for img in soup.findAll('img'):
+                src = img.get('src')
+                # finding ones which match the patterns
+                for p in patterns:
+                    if p in src:
+                        # make sure the img is large enough
+                        size = src[-7:-4]
+                        if size.isdigit() and int(size) > self.min_img_size:
+                            self.result(src)
 
-        self.work_finished()
-
+        except Exception, ex:
+            print 'generate pic url error: %s' % ex
+        finally:
+            self.work_finished()
 
 class SavePic(Worker):
     save_root = './output'
@@ -137,15 +181,18 @@ class SavePic(Worker):
             # be to put off the next message
             async_request(pic_url, self.save_data)
         else:
+            print 'already have image'
+            # still put off our msg
+            self.result(self.save_path)
             self.work_finished()
 
     def save_data(self, data):
         try:
             with open(self.save_path,'w') as fh:
                 fh.write(data)
-            self.result(path)
-        except:
-            pass
+            self.result(self.save_path)
+        except Exception, ex:
+            print 'save exception: %s' % ex
         finally:
             self.work_finished()
 
@@ -153,7 +200,11 @@ class SavePic(Worker):
 class GeneratePicDetails(Worker):
     max_workers = 10
     def run(self, pic_path):
-        av_hash = get_image_visual_hash(pic_path)
-        mc.set(str(pic_path)+':av_hash',str(av_hash))
-        self.work_finished()
+        try:
+            av_hash = get_image_visual_hash(pic_path)
+            mc.set(str(pic_path)+':av_hash',str(av_hash))
+        except Exception, ex:
+            print 'generate pic details error: %s' % ex
+        finally:
+            self.work_finished()
 
