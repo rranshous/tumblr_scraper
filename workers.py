@@ -68,7 +68,7 @@ class Worker(object):
         print 'running worker: %s' % type(self).__name__
         self.run(*args,**kwargs)
 
-
+N = 1
 class GeneratePageURLs(Worker):
     """
     starting at the root find all the pages off root
@@ -86,7 +86,7 @@ class GeneratePageURLs(Worker):
 
 
 class ValidatePageURL(Worker):
-    max_workers = 10
+    max_workers = N * 2
 
     def __init__(self,*args):
         super(ValidatePageURL,self).__init__(*args)
@@ -123,7 +123,7 @@ class ValidatePageURL(Worker):
 
 class GeneratePicURLs(Worker):
     min_img_size = 300
-    max_workers = 10
+    max_workers = N * 2
 
     def __init__(self,*args):
         super(GeneratePicURLs,self).__init__(*args)
@@ -163,7 +163,7 @@ class GeneratePicURLs(Worker):
 
 class SavePic(Worker):
     save_root = './output'
-    max_workers = 10
+    max_workers = 50
 
     def __init__(self,*args):
         super(SavePic,self).__init__(*args)
@@ -199,7 +199,7 @@ class SavePic(Worker):
 
 
 class GeneratePicDetails(Worker):
-    max_workers = 10
+    max_workers = 50
     def run(self, pic_path):
         try:
             av_hash = get_image_visual_hash(pic_path)
