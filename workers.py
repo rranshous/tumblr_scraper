@@ -87,6 +87,7 @@ class GeneratePageURLs(Worker):
 
 class ValidatePageURL(Worker):
     max_workers = N * 2
+    max_workers = 1
 
     def __init__(self,*args):
         super(ValidatePageURL,self).__init__(*args)
@@ -99,6 +100,7 @@ class ValidatePageURL(Worker):
             # memcache to the rescue
             valid = mc.get(self.page_url + ':valid')
             if valid:
+                print 'valid'
                 self.result(self.page_url)
                 self.work_finished()
             else:
@@ -114,7 +116,7 @@ class ValidatePageURL(Worker):
             if html and 'post' in html: # TODO: better / does this work ?
                 self.result(self.page_url)
                 mc.set(self.page_url + ':valid',1)
-            self.work_finished()
+                self.work_finished()
 
         except Exception, ex:
             print 'validate page error: %s' % ex
@@ -124,6 +126,7 @@ class ValidatePageURL(Worker):
 class GeneratePicURLs(Worker):
     min_img_size = 300
     max_workers = N * 2
+    max_workers = 1
 
     def __init__(self,*args):
         super(GeneratePicURLs,self).__init__(*args)
@@ -163,7 +166,8 @@ class GeneratePicURLs(Worker):
 
 class SavePic(Worker):
     save_root = './output'
-    max_workers = 50
+    max_workers = N * 50
+    max_workers = 1
 
     def __init__(self,*args):
         super(SavePic,self).__init__(*args)
@@ -199,7 +203,8 @@ class SavePic(Worker):
 
 
 class GeneratePicDetails(Worker):
-    max_workers = 50
+    max_workers = N * 50
+    max_workers = 1
     def run(self, pic_path):
         try:
             av_hash = get_image_visual_hash(pic_path)
