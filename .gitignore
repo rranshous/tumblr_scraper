@@ -1,4 +1,5 @@
 *.pyc
 *.swp
-/output
 *.swo
+/output
+/sites.txt
