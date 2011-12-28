@@ -1,0 +1,16 @@
+
+we are going to be using the thrift services
+for the heavy resource lifting.
+
+those services will be doing the scraping of the site
+and the storing of the image meta/data
+
+
+create code which will:
+
+ read in site list
+ scrape the blog site
+ search through pages for posts
+ search through posts for images
+ download images
+ save images to tumblrimage service
