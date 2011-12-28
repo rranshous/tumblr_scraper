@@ -4,3 +4,12 @@
 [submodule "imgcompare"]
 	path = imgcompare
 	url = git@github.com:rranshous/imgcompare.git
+[submodule "lib/discovery"]
+	path = lib/discovery
+	url = git@github.com:rranshous/discovery.git
+[submodule "lib/tumblrimages"]
+	path = lib/tumblrimages
+	url = git@github.com:rranshous/tumblrimages.git
+[submodule "lib/scraper"]
+	path = lib/scraper
+	url = git@github.com:rranshous/scraper.git
