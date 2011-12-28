@@ -13,3 +13,6 @@
 [submodule "lib/scraper"]
 	path = lib/scraper
 	url = git@github.com:rranshous/scraper.git
+[submodule "lib/requester"]
+	path = lib/requester
+	url = git@github.com:rranshous/requester.git
