@@ -3,6 +3,28 @@ from lib.scraper import Scraper, o as so
 from lib.tumblrimages import TumblrImages, o as to
 from lib.requester import Requester, o as ro
 
+from lib.thread_utils import thread_out_work
+
+
+def thread_scraper_work(sites,sync=False):
+    print 'threading scraper'
+    def work(site):
+        try:
+            print 'starting work: %s' % site
+            r = (site,BlogScraper(site).update_scrape(sync=sync))
+            print 'done work: %s' % site
+            return r
+        except Exception, ex:
+            print 'site work exception: %s' % ex
+            return (site,'ERR')
+
+    args = [(site,) for site in sites]
+    print 'args: %s' % args
+    print 'starting threading'
+    r = thread_out_work(args,work,1)
+    print 'done'
+    return r
+
 
 class BlogScraper(object):
     def __init__(self, blog_root_url):
@@ -14,7 +36,6 @@ class BlogScraper(object):
 
     def generate_page_urls(self):
         print 'generating page urls'
-        yield self.root_url
         for i in xrange(1,self.max_pages):
             yield self.root_url + 'page/' + str(i)
 
@@ -48,9 +69,17 @@ class BlogScraper(object):
                 if found:
                     break
 
-    def scrape(self):
 
-        print 'scraping start'
+    def update_scrape(self,sync=False):
+        """
+        starts at the newest page and scrapes until it
+        finds an image it's already stored
+
+        if sync is true will scrape entire site not stopping
+        when it finds repeat
+        """
+
+        print 'update scraping start'
 
         added = 0
 
@@ -88,10 +117,10 @@ class BlogScraper(object):
                 # downloaded this image from this blog
                 print 'uploading'
                 with connect(TumblrImages) as c:
-                    tumblr_image = c.add_image(ti)
+                    tumblr_image = c.add_image(tumblr_image)
 
                 # if our tumblr image now has an id than it was saved
-                if not tumblr_image.id:
+                if not tumblr_image.id and not sync:
                     print 'image already uploaded'
                     # we've already added this image before
                     # we're done updating this blog
@@ -107,7 +136,7 @@ class BlogScraper(object):
         with connect(Requester) as c:
             try:
                 img_r = c.urlopen(ro.Request(url))
-            except Exception:
+            except Exception, ex:
                 # fail, try again ?
                 print 'exception getting img: %s' % ex
                 try:
@@ -120,3 +149,8 @@ class BlogScraper(object):
             return None
 
         return img_r.content
+
+
+if __name__ == '__main__':
+    sites = [l.strip() for l in open('./sites.txt','r').readlines()]
+    thread_scraper_work(sites)
