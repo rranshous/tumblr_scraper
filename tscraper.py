@@ -105,6 +105,8 @@ class BlogScraper(object):
                 print 'downloading'
                 image_data = self.download_image_data(img_url)
 
+                assert image_data, "image found no data"
+
                 # create a tumblr image
                 tumblr_image = to.TumblrImage()
                 tumblr_image.data = image_data
@@ -160,4 +162,4 @@ class BlogScraper(object):
 
 if __name__ == '__main__':
     sites = [l.strip() for l in open('./sites.txt','r').readlines()]
-    thread_scraper_work(sites)
+    thread_scraper_work(sites,True)
