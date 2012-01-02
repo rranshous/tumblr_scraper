@@ -104,7 +104,7 @@ class BlogScraper(object):
                 # download the image
                 print 'downloading'
                 try:
-                    image_data = self.download_image_data(img_url)>
+                    image_data = self.download_image_data(img_url)
                 except Exception, ex:
                     print 'Exception downloading data: %s %s' % (img_url,ex)
                     if not sync:
