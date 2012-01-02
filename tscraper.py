@@ -131,13 +131,19 @@ class BlogScraper(object):
                     if not sync:
                         raise ex
 
+                try:
 
-                assert tumblr_image.data, "image has no data"
-                assert tumblr_image.xdim, "image has no x"
-                assert tumblr_image.ydim, "image has no y"
-                assert tumblr_image.size, "image has no size"
-                assert tumblr_image.vhash, "image has no vhash"
-                assert tumblr_image.shahash, "image has no sha"
+                    assert tumblr_image.data, "image has no data"
+                    assert tumblr_image.xdim, "image has no x"
+                    assert tumblr_image.ydim, "image has no y"
+                    assert tumblr_image.size, "image has no size"
+                    assert tumblr_image.vhash, "image has no vhash"
+                    assert tumblr_image.shahash, "image has no sha"
+
+                except Exception, ex:
+                    print 'assert fail: %s %s' % (tumblr_image,ex)
+                    if not sync:
+                        raise ex
 
                 # if our tumblr image now has an id than it was saved
                 if not tumblr_image.id and not sync:
