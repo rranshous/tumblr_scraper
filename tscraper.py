@@ -103,7 +103,12 @@ class BlogScraper(object):
 
                 # download the image
                 print 'downloading'
-                image_data = self.download_image_data(img_url)
+                try:
+                    image_data = self.download_image_data(img_url)>
+                except Exception, ex:
+                    print 'Exception downloading data: %s %s' % (img_url,ex)
+                    if not sync:
+                        raise ex
 
                 assert image_data, "image found no data"
 
@@ -118,8 +123,14 @@ class BlogScraper(object):
                 # it will also not add the image if we've already
                 # downloaded this image from this blog
                 print 'uploading'
-                with connect(TumblrImages) as c:
-                    tumblr_image = c.add_image(tumblr_image)
+                try:
+                    with connect(TumblrImages) as c:
+                        tumblr_image = c.add_image(tumblr_image)
+                except Exception, ex:
+                    print 'Exception adding image: %s %s' % (tumblr_image,ex)
+                    if not sync:
+                        raise ex
+
 
                 assert tumblr_image.data, "image has no data"
                 assert tumblr_image.xdim, "image has no x"
