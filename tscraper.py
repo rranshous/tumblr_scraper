@@ -41,8 +41,13 @@ class BlogScraper(object):
 
     def validate_page(self, url):
         print 'validating page: %s' % url
-        with connect(Requester) as c:
-            r = c.urlopen(ro.Request(url))
+        try:
+            with connect(Requester) as c:
+                r = c.urlopen(ro.Request(url))
+        except ro.Exception, ex:
+            print 'Exception validating, retrying: %s %s' % (url,ex.msg)
+        except Exception, ex:
+            print 'Exception validating, retrying: %s %s' % (url,ex)
         html = r.content
         try:
             if html and 'post' in html: # TODO: better / does this work ?
@@ -94,7 +99,17 @@ class BlogScraper(object):
             # get all the pics on the page
             with connect(Scraper) as c:
                 print 'getting page images'
-                img_urls = c.get_images(page_url)
+                try:
+                    img_urls = c.get_images(page_url)
+                except so.Exception, ex:
+                    print 'Exception getting images: %s %s' % (img_url,ex.msg)
+                    if not sync:
+                        raise ex
+                except Exception, ex:
+                    print 'Exception getting images: %s %s' % (img_url,ex)
+                    if not sync:
+                        raise ex
+
                 print 'images: %s' % len(img_urls)
 
             # go through the good img urls
@@ -105,12 +120,21 @@ class BlogScraper(object):
                 print 'downloading'
                 try:
                     image_data = self.download_image_data(img_url)
+                except ro.Exception, ex:
+                    print 'Exception downloading data: %s %s' %(img_url,ex.msg)
+                    if not sync:
+                        raise ex
                 except Exception, ex:
                     print 'Exception downloading data: %s %s' % (img_url,ex)
                     if not sync:
                         raise ex
 
-                assert image_data, "image found no data"
+                try:
+                    assert image_data, "image found no data"
+                except Exception, ex:
+                    print 'no image data: %s' % img_url
+                    if not sync:
+                        raise ex
 
                 # create a tumblr image
                 tumblr_image = to.TumblrImage()
