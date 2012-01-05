@@ -46,8 +46,12 @@ class BlogScraper(object):
                 r = c.urlopen(ro.Request(url))
         except ro.Exception, ex:
             print 'oException validating, retrying: %s %s' % (url,ex.msg)
+            with connect(Requester) as c:
+                r = c.urlopen(ro.Request(url))
         except Exception, ex:
             print 'Exception validating, retrying: %s %s' % (url,ex)
+            with connect(Requester) as c:
+                r = c.urlopen(ro.Request(url))
         html = r.content
         try:
             if html and 'post' in html: # TODO: better / does this work ?
@@ -92,9 +96,16 @@ class BlogScraper(object):
         for page_url in self.generate_page_urls():
 
             # make sure it's a valid page
-            if not self.validate_page(page_url):
-                # we've hit an invalid page, done
-                return added
+            try:
+                if not self.validate_page(page_url):
+                    # we've hit an invalid page, done
+                    return added
+            except ro.Exception, ex:
+                print 'oException validating: %s %s' % (url,ex.msg)
+                return self.validate_page(url)
+            except Exception, ex:
+                print 'Exception validating: %s %s' % (url,ex)
+                return self.validate_page(url)
 
             # get all the pics on the page
             with connect(Scraper) as c:
