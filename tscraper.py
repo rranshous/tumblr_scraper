@@ -45,7 +45,7 @@ class BlogScraper(object):
             with connect(Requester) as c:
                 r = c.urlopen(ro.Request(url))
         except ro.Exception, ex:
-            print 'Exception validating, retrying: %s %s' % (url,ex.msg)
+            print 'oException validating, retrying: %s %s' % (url,ex.msg)
         except Exception, ex:
             print 'Exception validating, retrying: %s %s' % (url,ex)
         html = r.content
@@ -102,7 +102,7 @@ class BlogScraper(object):
                 try:
                     img_urls = c.get_images(page_url)
                 except so.Exception, ex:
-                    print 'Exception getting images: %s %s' % (img_url,ex.msg)
+                    print 'oException getting images: %s %s' % (img_url,ex.msg)
                     if not sync:
                         raise ex
                 except Exception, ex:
@@ -121,7 +121,7 @@ class BlogScraper(object):
                 try:
                     image_data = self.download_image_data(img_url)
                 except ro.Exception, ex:
-                    print 'Exception downloading data: %s %s' %(img_url,ex.msg)
+                    print 'oException downloading data: %s %s' %(img_url,ex.msg)
                     if not sync:
                         raise ex
                 except Exception, ex:
@@ -150,8 +150,12 @@ class BlogScraper(object):
                 try:
                     with connect(TumblrImages) as c:
                         tumblr_image = c.add_image(tumblr_image)
+                except to.Exception, ex:
+                    print 'oException adding image: %s %s' % (img_url,ex)
+                    if not sync:
+                        raise ex
                 except Exception, ex:
-                    print 'Exception adding image: %s %s' % (tumblr_image,ex)
+                    print 'Exception adding image: %s %s' % (img_url,ex)
                     if not sync:
                         raise ex
 
@@ -165,7 +169,7 @@ class BlogScraper(object):
                     assert tumblr_image.shahash, "image has no sha"
 
                 except Exception, ex:
-                    print 'assert fail: %s %s' % (tumblr_image,ex)
+                    print 'assert fail: %s %s' % (img_url,ex)
                     if not sync:
                         raise ex
 
