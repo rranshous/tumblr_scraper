@@ -101,11 +101,11 @@ class BlogScraper(object):
                     # we've hit an invalid page, done
                     return added
             except ro.Exception, ex:
-                print 'oException validating: %s %s' % (url,ex.msg)
-                return self.validate_page(url)
+                print 'oException validating: %s %s' % (page_url,ex.msg)
+                return self.validate_page(page_url)
             except Exception, ex:
-                print 'Exception validating: %s %s' % (url,ex)
-                return self.validate_page(url)
+                print 'Exception validating: %s %s' % (page_url,ex)
+                return self.validate_page(page_url)
 
             # get all the pics on the page
             with connect(Scraper) as c:
@@ -113,11 +113,11 @@ class BlogScraper(object):
                 try:
                     img_urls = c.get_images(page_url)
                 except so.Exception, ex:
-                    print 'oException getting images: %s %s' % (img_url,ex.msg)
+                    print 'oException getting images: %s %s' % (page_url,ex.msg)
                     if not sync:
                         raise ex
                 except Exception, ex:
-                    print 'Exception getting images: %s %s' % (img_url,ex)
+                    print 'Exception getting images: %s %s' % (page_url,ex)
                     if not sync:
                         raise ex
 
