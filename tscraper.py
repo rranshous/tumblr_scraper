@@ -2,9 +2,9 @@ from lib.discovery import connect
 from lib.scraper import Scraper, o as so
 from lib.tumblrimages import TumblrImages, o as to
 from lib.requester import Requester, o as ro
-
 from lib.thread_utils import thread_out_work
 
+import time
 
 def thread_scraper_work(sites,sync=False):
     print 'threading scraper'
@@ -152,6 +152,7 @@ class BlogScraper(object):
                 tumblr_image.data = image_data
                 tumblr_image.source_blog_url = self.root_url
                 tumblr_image.source_url = img_url
+                tumblr_image.downloaded_at = time.time()
 
                 # when we add an image to the tumblrimage
                 # service it will fill out stat's about the image
