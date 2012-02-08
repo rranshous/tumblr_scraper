@@ -1,6 +1,6 @@
 from lib.discovery import connect
 from lib.scraper import Scraper, o as so
-from lib.tumblrimages import TumblrImages, o as to
+from lib.images import Images, o as io
 from lib.requester import Requester, o as ro
 from lib.thread_utils import thread_out_work
 
@@ -148,9 +148,9 @@ class BlogScraper(object):
                         raise ex
 
                 # create a tumblr image
-                tumblr_image = to.TumblrImage()
+                tumblr_image = io.Image()
                 tumblr_image.data = image_data
-                tumblr_image.source_blog_url = self.root_url
+                tumblr_image.source_page_url = self.root_url
                 tumblr_image.source_url = img_url
                 tumblr_image.downloaded_at = time.time()
 
@@ -160,9 +160,9 @@ class BlogScraper(object):
                 # downloaded this image from this blog
                 print 'uploading'
                 try:
-                    with connect(TumblrImages) as c:
+                    with connect(Images) as c:
                         tumblr_image = c.add_image(tumblr_image)
-                except to.Exception, ex:
+                except io.Exception, ex:
                     print 'oException adding image: %s %s' % (img_url,ex)
                     if not sync:
                         raise ex
