@@ -10,3 +10,6 @@
 [submodule "lib/thread_utils"]
 	path = lib/thread_utils
 	url = git@github.com:rranshous/thread_utils.git
+[submodule "lib/images"]
+	path = lib/images
+	url = git@github.com:rranshous/images.git
